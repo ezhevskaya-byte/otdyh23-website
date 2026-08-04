@@ -264,14 +264,17 @@ function renderRoomViewer(roomId) {
       titleEl.textContent = scenario.title;
       copy.appendChild(titleEl);
     }
-    if (scenario.subtitle) {
+    // У категории «Комфорт» subtitle и meta guests/sleeping убраны — их заменяют фирменные бейджи
+    if (scenario.subtitle && roomId !== 'comfort') {
       const subtitleEl = document.createElement('p');
       subtitleEl.className = 'scenario-subtitle';
       subtitleEl.textContent = scenario.subtitle;
       copy.appendChild(subtitleEl);
     }
 
-    const metaBits = [scenario.guests, scenario.sleeping].filter(Boolean);
+    const metaBits = roomId === 'comfort'
+      ? []
+      : [scenario.guests, scenario.sleeping].filter(Boolean);
     if (metaBits.length) {
       const meta = document.createElement('div');
       meta.className = 'meta';
@@ -286,8 +289,15 @@ function renderRoomViewer(roomId) {
 
     if (scenario.description) {
       const desc = document.createElement('p');
+      desc.className = 'scenario-intro';
       desc.textContent = scenario.description;
       copy.appendChild(desc);
+    }
+
+    // Бейджи удобств: сразу после вступления, перед кнопкой «Проверить даты»
+    const amenitiesHtml = renderAmenityGroups(scenario.amenityGroups);
+    if (amenitiesHtml) {
+      copy.insertAdjacentHTML('beforeend', amenitiesHtml);
     }
 
     const book = document.createElement('a');
@@ -379,7 +389,23 @@ function renderRooms() {
       copy.appendChild(meta);
     }
 
-    if (room.shortDescription) {
+    if (room.descriptionTitle) {
+      const descTitle = document.createElement('h4');
+      descTitle.className = 'room-description-title';
+      descTitle.textContent = room.descriptionTitle;
+      copy.appendChild(descTitle);
+    }
+
+    if (room.descriptionFull) {
+      String(room.descriptionFull).split(/\n\s*\n/).forEach(part => {
+        const text = part.trim();
+        if (!text) return;
+        const desc = document.createElement('p');
+        desc.className = 'room-description-text';
+        desc.textContent = text;
+        copy.appendChild(desc);
+      });
+    } else if (room.shortDescription) {
       const desc = document.createElement('p');
       desc.textContent = room.shortDescription;
       copy.appendChild(desc);
@@ -432,6 +458,59 @@ function bindImageFallback(img) {
   });
 }
 
+function escapeAmenityText(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * HTML-блоки групп удобств для модального окна сценария.
+ * Вставляется сразу после вступительного текста и перед кнопкой «Проверить даты».
+ * @param {Array} groups — scenario.amenityGroups из data/*.json
+ * @returns {string} разметка .scenario-amenities или ''
+ */
+function renderAmenityGroups(groups) {
+  if (!Array.isArray(groups) || !groups.length) return '';
+
+  const getIcon = (typeof window !== 'undefined' && typeof window.getOtdyh23Icon === 'function')
+    ? window.getOtdyh23Icon
+    : (typeof getOtdyh23Icon === 'function' ? getOtdyh23Icon : null);
+
+  const groupsHtml = groups.map(group => {
+    if (!group || !Array.isArray(group.items) || !group.items.length) return '';
+
+    const titleHtml = group.title
+      ? '<h4 class="amenity-group__title">' + escapeAmenityText(group.title) + '</h4>'
+      : '';
+
+    const badgesHtml = group.items.map(item => {
+      if (!item || !item.label) return '';
+      const iconHtml = getIcon ? (getIcon(item.icon) || '') : '';
+      return (
+        '<div class="amenity-badge">' +
+          iconHtml +
+          '<span class="amenity-badge__label">' + escapeAmenityText(item.label) + '</span>' +
+        '</div>'
+      );
+    }).join('');
+
+    if (!badgesHtml) return '';
+
+    return (
+      '<div class="amenity-group">' +
+        titleHtml +
+        '<div class="amenity-badges">' + badgesHtml + '</div>' +
+      '</div>'
+    );
+  }).filter(Boolean).join('');
+
+  if (!groupsHtml) return '';
+  return '<section class="scenario-amenities">' + groupsHtml + '</section>';
+}
+
 /* ─── Загрузка data/*.json → ROOM_CATALOG (comfort, deluxe-2, deluxe-3, family) ─── */
 const COMFORT_SCENARIO_PHOTO_DIRS = {
   '2-guests': 'images/comfort/2-guests',
@@ -476,50 +555,47 @@ function buildComfortScenarioPhotos(scenario, roomName) {
 function adaptComfortJson(data, fallback) {
   if (!data || typeof data !== 'object') return fallback;
 
-  if (Array.isArray(data.scenarios) && data.scenarios[0] && Array.isArray(data.scenarios[0].photos)) {
-    return Object.assign({}, fallback, data, {
-      shortDescription: data.shortDescription || data.descriptionShort || fallback.shortDescription,
-      pills: Array.isArray(data.pills) ? data.pills : fallback.pills,
-      features: Array.isArray(data.cardFeatures)
-        ? data.cardFeatures
-        : (Array.isArray(data.features) ? data.features : fallback.features),
-      bookButtonText: (data.booking && data.booking.button) || data.bookButtonText || fallback.bookButtonText
-    });
-  }
-
   const name = data.name || fallback.name;
-  const pills = Array.isArray(data.pills) && data.pills.length
-    ? data.pills
-    : (fallback.pills || []);
+  const bookingButton = (data.booking && data.booking.button) || data.bookButtonText || fallback.bookButtonText || 'Проверить даты';
 
-  let features = Array.isArray(data.cardFeatures)
-    ? data.cardFeatures
-    : (Array.isArray(data.features) ? data.features : (fallback.features || []));
-  if (!Array.isArray(data.cardFeatures) && !Array.isArray(data.features) && Array.isArray(data.sellingPoints) && !pills.length) {
-    features = data.sellingPoints;
-  } else if (!Array.isArray(data.cardFeatures) && !Array.isArray(data.features) && Array.isArray(fallback.features)) {
-    features = fallback.features;
-  }
+  function mapScenario(scenario) {
+    if (!scenario || typeof scenario !== 'object') return null;
+    const fallbackScenario = (fallback.scenarios || []).find(s => s.id === scenario.id) || {};
+    const photos = Array.isArray(scenario.photos) && scenario.photos.length
+      ? scenario.photos.filter(p => p && p.src)
+      : buildComfortScenarioPhotos(scenario, name);
 
-  const scenarios = Array.isArray(data.scenarios) ? data.scenarios.map(scenario => {
-    const photos = buildComfortScenarioPhotos(scenario, name);
-    const fallbackScenario = (fallback.scenarios || []).find(s => s.id === scenario.id)
-      || (fallback.scenarios || [])[0]
-      || {};
+    const isComfort = data.id === 'comfort';
+    const amenityGroups = Array.isArray(scenario.amenityGroups) && scenario.amenityGroups.length
+      ? scenario.amenityGroups
+      : (Array.isArray(fallbackScenario.amenityGroups) ? fallbackScenario.amenityGroups : []);
+
     return {
       id: scenario.id || fallbackScenario.id,
       title: scenario.title || fallbackScenario.title,
-      subtitle: scenario.subtitle || (name + (scenario.title ? ' · ' + scenario.title : '')),
-      guests: formatGuestsLabel(scenario.guests) || fallbackScenario.guests || '',
-      sleeping: scenario.sleeping || fallbackScenario.sleeping || '',
+      subtitle: isComfort
+        ? ''
+        : (scenario.subtitle || fallbackScenario.subtitle || (name + (scenario.title ? ' · ' + scenario.title : ''))),
+      guests: isComfort ? '' : (formatGuestsLabel(scenario.guests) || fallbackScenario.guests || ''),
+      sleeping: isComfort ? '' : (scenario.sleeping || fallbackScenario.sleeping || ''),
       description: scenario.description || fallbackScenario.description || '',
+      amenityGroups: amenityGroups,
       photos: photos.length ? photos : (fallbackScenario.photos || []),
-      buttonText: (data.booking && data.booking.button) || scenario.buttonText || fallbackScenario.buttonText || 'Проверить даты'
+      buttonText: scenario.buttonText || bookingButton
     };
-  }) : (fallback.scenarios || []);
+  }
+
+  const scenarios = Array.isArray(data.scenarios)
+    ? data.scenarios.map(mapScenario).filter(Boolean)
+    : (fallback.scenarios || []);
+
+  const pills = Array.isArray(data.pills) ? data.pills : (fallback.pills || []);
+  const features = Array.isArray(data.cardFeatures)
+    ? data.cardFeatures
+    : (Array.isArray(data.features) ? data.features : (fallback.features || []));
 
   const coverFromTwoGuests = (function () {
-    const twoGuests = (scenarios || []).find(s => s.id === '2-guests' || s.id === 'comfort-2') || scenarios[0];
+    const twoGuests = scenarios.find(s => s.id === '2-guests' || s.id === 'comfort-2') || scenarios[0];
     if (!twoGuests || !Array.isArray(twoGuests.photos)) return null;
     const main = twoGuests.photos.find(p => {
       if (!p || !p.src) return false;
@@ -533,12 +609,14 @@ function adaptComfortJson(data, fallback) {
     name: name,
     eyebrow: data.eyebrow || fallback.eyebrow || ('Категория «' + name + '»'),
     shortDescription: data.descriptionShort || data.shortDescription || fallback.shortDescription,
-    label: data.label || (data.features && data.features.balcony ? 'Балкон' : fallback.label),
+    descriptionTitle: data.descriptionTitle || fallback.descriptionTitle || '',
+    descriptionFull: data.descriptionFull || fallback.descriptionFull || '',
+    label: Object.prototype.hasOwnProperty.call(data, 'label') ? (data.label || '') : (fallback.label || ''),
     photo: data.photo || coverFromTwoGuests || fallback.photo,
-    pills: pills.length ? pills : fallback.pills,
+    pills: pills,
     features: features,
     viewButtonText: data.viewButtonText || fallback.viewButtonText || 'Посмотреть варианты',
-    bookButtonText: (data.booking && data.booking.button) || data.bookButtonText || fallback.bookButtonText || 'Проверить даты',
+    bookButtonText: bookingButton,
     title: data.title || fallback.title || 'Варианты размещения',
     scenarios: scenarios.length ? scenarios : fallback.scenarios
   };
@@ -593,6 +671,89 @@ addEventListener('keydown', e => {
   if (lightbox.classList.contains('open')) closeLightbox();
   else if (roomViewer.classList.contains('open')) closeRoomViewer();
 });
+
+/* ─── Accordion Gallery: hover на ПК, tap на мобильных ─── */
+(() => {
+  const gallery = document.getElementById('accGallery');
+  if (!gallery) return;
+
+  const panels = [...gallery.querySelectorAll('.acc-panel')];
+  if (!panels.length) return;
+
+  const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
+
+  function setOpen(panel) {
+    panels.forEach(p => {
+      const on = p === panel;
+      p.classList.toggle('is-open', on);
+      p.setAttribute('aria-expanded', on ? 'true' : 'false');
+    });
+  }
+
+  function bindMode() {
+    gallery.classList.toggle('is-touch', !finePointer.matches);
+    panels.forEach(panel => {
+      panel.onmouseenter = null;
+      panel.onclick = null;
+    });
+    gallery.onmouseleave = null;
+
+    if (finePointer.matches) {
+      panels.forEach(panel => {
+        panel.onmouseenter = () => setOpen(panel);
+      });
+      gallery.onmouseleave = () => setOpen(panels[0]);
+    } else {
+      panels.forEach(panel => {
+        panel.onclick = () => setOpen(panel);
+      });
+    }
+  }
+
+  bindMode();
+  if (finePointer.addEventListener) finePointer.addEventListener('change', bindMode);
+  else if (finePointer.addListener) finePointer.addListener(bindMode);
+
+  panels.forEach(panel => {
+    panel.addEventListener('focus', () => setOpen(panel));
+    panel.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        setOpen(panel);
+      }
+    });
+  });
+
+  /* Fade-ротация 3 главных фото в первой панели */
+  const slides = [...gallery.querySelectorAll('.acc-panel__slides img')];
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  let slideIndex = 0;
+  let slideTimer = null;
+
+  function showSlide(next) {
+    if (!slides.length) return;
+    slides[slideIndex].classList.remove('is-active');
+    slideIndex = next % slides.length;
+    slides[slideIndex].classList.add('is-active');
+  }
+
+  function stopSlides() {
+    if (slideTimer) {
+      clearInterval(slideTimer);
+      slideTimer = null;
+    }
+  }
+
+  function startSlides() {
+    stopSlides();
+    if (slides.length < 2 || reduceMotion.matches) return;
+    slideTimer = setInterval(() => showSlide(slideIndex + 1), 4000);
+  }
+
+  startSlides();
+  if (reduceMotion.addEventListener) reduceMotion.addEventListener('change', startSlides);
+  else if (reduceMotion.addListener) reduceMotion.addListener(startSlides);
+})();
 
 /* ─── Кнопка «Наверх» ─── */
 backTop.addEventListener('click', () => {

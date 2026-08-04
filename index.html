@@ -12,8 +12,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.bookinglite.ru">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Manrope:wght@400;500;600;700&family=Prata&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Inter:wght@400&family=Manrope:wght@400;500;600;700&family=Prata&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/icons.css">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LodgingBusiness","name":"Гостевой дом «Отдых.23»","telephone":"+7-918-315-00-31","address":{"@type":"PostalAddress","addressLocality":"Лазаревское","addressRegion":"Краснодарский край","streetAddress":"ул. Эвкалиптовая, 12","addressCountry":"RU"},"checkinTime":"15:00","checkoutTime":"12:00"}</script>
 </head>
 <body>
@@ -73,6 +74,97 @@
     <div class="hero-photo">
       <img src="images/01_Hero_Главный_экран/00_hero-comfort.png" alt="Комната Comfort в гостевом доме Отдых.23">
     </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     ACCORDION GALLERY: что ждёт гостей
+     ═══════════════════════════════════════════ -->
+<section class="section ivory accordion-section" aria-labelledby="accordion-title">
+  <div class="wrap">
+    <div class="head reveal">
+      <h2 id="accordion-title">Несколько причин выбрать Отдых.23</h2>
+    </div>
+    <div class="acc-gallery reveal" id="accGallery">
+      <button type="button" class="acc-panel is-open" aria-expanded="true" aria-label="Для двоих и всей семьи">
+        <span class="acc-panel__slides" aria-hidden="true">
+          <img class="is-active" src="images/02_Комната_Комфорт/01_Для_двух_гостей/00_Комфорт 2 эт — копия.png" alt="" loading="eager">
+          <img src="images/03_Комната_Делюкс_2_этаж/01_Для_2_3_гостей/00_ChatGPT Image 2 мая 2026 г., 12_30_03.png" alt="" loading="lazy">
+          <img src="images/05_Семейная_комната/01_Для_2_гостей/00_люкс главная .png" alt="" loading="lazy">
+        </span>
+        <span class="acc-panel__caption">Для двоих и всей семьи</span>
+      </button>
+      <button type="button" class="acc-panel" aria-expanded="false" aria-label="Подогреваемый бассейн">
+        <img src="images/06_Бассейн/00_ChatGPT Image 26 мая 2026 г., 23_09_32.png" alt="" loading="lazy">
+        <span class="acc-panel__caption">Подогреваемый бассейн</span>
+      </button>
+      <button type="button" class="acc-panel" aria-expanded="false" aria-label="Уютная терраса для отдыха">
+        <img src="images/08_Терраса/00_ChatGPT Image 26 мая 2026 г., 22_29_11.png" alt="" loading="lazy">
+        <span class="acc-panel__caption">Уютная терраса для отдыха</span>
+      </button>
+      <button type="button" class="acc-panel" aria-expanded="false" aria-label="Только для гостей">
+        <img src="images/06_Бассейн/ChatGPT Image 24 мая 2026 г., 17_43_10.png" alt="" loading="lazy">
+        <span class="acc-panel__caption">Только для гостей</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     КОМФОРТ: четыре ценности отдыха
+     ═══════════════════════════════════════════ -->
+<section class="section comfort-values" aria-labelledby="comfort-values-title">
+  <div class="wrap">
+    <div class="head reveal">
+      <h2 id="comfort-values-title">Всё, что делает отдых по-настоящему комфортным</h2>
+    </div>
+    <div class="comfort-values-grid">
+      <article class="comfort-value reveal reveal-delay-1">
+        <span class="comfort-value__icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="16" r="1.1" fill="currentColor" stroke="none"/>
+            <path d="M15 11.5a6.5 6.5 0 0 1 0 9"/>
+            <path d="M18.5 8.5a11 11 0 0 1 0 15"/>
+            <path d="M22 5.5a15.5 15.5 0 0 1 0 21"/>
+          </svg>
+        </span>
+        <h3>Тишина</h3>
+        <p>Никаких шумных компаний и громкой музыки. Только спокойная атмосфера для полноценного отдыха.</p>
+      </article>
+      <article class="comfort-value reveal reveal-delay-2">
+        <span class="comfort-value__icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 5v5.5M16 21.5V27M5 16h5.5M21.5 16H27"/>
+            <path d="M9.2 9.2l3.9 3.9M18.9 18.9l3.9 3.9M22.8 9.2l-3.9 3.9M13.1 18.9l-3.9 3.9"/>
+          </svg>
+        </span>
+        <h3>Чистота</h3>
+        <p>Чистые комнаты и ухоженная территория. Мы уделяем этому особое внимание каждый день.</p>
+      </article>
+      <article class="comfort-value reveal reveal-delay-3">
+        <span class="comfort-value__icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 5.5 26 10v7.2c0 6.2-4.2 9.8-10 11.3-5.8-1.5-10-5.1-10-11.3V10l10-4.5z"/>
+            <path d="M12.5 16.2h7"/>
+          </svg>
+        </span>
+        <h3>Спокойствие</h3>
+        <p>Закрытая территория только для гостей. Можно расслабиться и ни о чём не беспокоиться.</p>
+      </article>
+      <article class="comfort-value reveal">
+        <span class="comfort-value__icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.5 14.5V12a2.5 2.5 0 0 1 5 0v2.5"/>
+            <path d="M15.5 12a2.5 2.5 0 0 1 5 0v4"/>
+            <path d="M20.5 14.5a2.2 2.2 0 0 1 4.2 1.1V19c0 4.2-3.2 7-8.7 8.5-5.5-1.5-8.7-4.3-8.7-8.5v-4.2a2.2 2.2 0 0 1 3.2-2"/>
+            <path d="M10.5 17.5V22"/>
+          </svg>
+        </span>
+        <h3>Забота</h3>
+        <p>Мы всегда рядом, если нужна помощь, и всегда оставляем вашим выходным личное пространство.</p>
+      </article>
+    </div>
+    <p class="comfort-values-note reveal">Именно из таких деталей складывается отдых, после которого хочется вернуться.</p>
   </div>
 </section>
 
@@ -473,6 +565,7 @@
 <button class="back-top" id="backTop" type="button" aria-label="Вернуться наверх">↑</button>
 
 
+<script src="js/otdyh23-icons.js"></script>
 <script src="js/room-catalog.js"></script>
 <script src="js/main.js"></script>
 </body>
