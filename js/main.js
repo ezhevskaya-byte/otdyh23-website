@@ -202,6 +202,10 @@ function activateRoomTab(tab) {
     const on = panel.id === tab.getAttribute('aria-controls');
     panel.classList.toggle('active', on);
     panel.hidden = !on;
+    if (on) {
+      const copy = panel.querySelector('.comfort-panel-copy');
+      if (copy) copy.scrollTop = 0;
+    }
   });
 }
 
@@ -307,7 +311,11 @@ function renderRoomViewer(roomId) {
     book.textContent = scenario.buttonText || 'Проверить даты';
     copy.appendChild(book);
 
-    panel.appendChild(buildGallery(scenario.photos));
+    const media = document.createElement('div');
+    media.className = 'comfort-panel-media';
+    media.appendChild(buildGallery(scenario.photos));
+
+    panel.appendChild(media);
     panel.appendChild(copy);
     roomViewerPanels.appendChild(panel);
   });
