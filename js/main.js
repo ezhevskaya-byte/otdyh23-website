@@ -268,29 +268,7 @@ function renderRoomViewer(roomId) {
       titleEl.textContent = scenario.title;
       copy.appendChild(titleEl);
     }
-    // У категории «Комфорт» subtitle и meta guests/sleeping убраны — их заменяют фирменные бейджи
-    if (scenario.subtitle && roomId !== 'comfort') {
-      const subtitleEl = document.createElement('p');
-      subtitleEl.className = 'scenario-subtitle';
-      subtitleEl.textContent = scenario.subtitle;
-      copy.appendChild(subtitleEl);
-    }
-
-    const metaBits = roomId === 'comfort'
-      ? []
-      : [scenario.guests, scenario.sleeping].filter(Boolean);
-    if (metaBits.length) {
-      const meta = document.createElement('div');
-      meta.className = 'meta';
-      metaBits.forEach(text => {
-        const pill = document.createElement('span');
-        pill.className = 'pill';
-        pill.textContent = text;
-        meta.appendChild(pill);
-      });
-      copy.appendChild(meta);
-    }
-
+    // Subtitle и meta guests/sleeping убраны во всех категориях — их заменяют фирменные бейджи
     if (scenario.description) {
       const desc = document.createElement('p');
       desc.className = 'scenario-intro';
@@ -529,15 +507,6 @@ const COMFORT_SCENARIO_PHOTO_DIRS = {
   'comfort-cot': 'images/comfort/baby-cot'
 };
 
-function formatGuestsLabel(value) {
-  if (typeof value === 'string' && value.trim()) return value;
-  const n = Number(value);
-  if (!n) return '';
-  if (n === 1) return '1 гость';
-  if (n >= 2 && n <= 4) return n + ' гостя';
-  return n + ' гостей';
-}
-
 function buildComfortScenarioPhotos(scenario, roomName) {
   if (Array.isArray(scenario.photos) && scenario.photos.length) {
     return scenario.photos.filter(p => p && p.src);
@@ -573,7 +542,6 @@ function adaptComfortJson(data, fallback) {
       ? scenario.photos.filter(p => p && p.src)
       : buildComfortScenarioPhotos(scenario, name);
 
-    const isComfort = data.id === 'comfort';
     const amenityGroups = Array.isArray(scenario.amenityGroups) && scenario.amenityGroups.length
       ? scenario.amenityGroups
       : (Array.isArray(fallbackScenario.amenityGroups) ? fallbackScenario.amenityGroups : []);
@@ -581,11 +549,9 @@ function adaptComfortJson(data, fallback) {
     return {
       id: scenario.id || fallbackScenario.id,
       title: scenario.title || fallbackScenario.title,
-      subtitle: isComfort
-        ? ''
-        : (scenario.subtitle || fallbackScenario.subtitle || (name + (scenario.title ? ' · ' + scenario.title : ''))),
-      guests: isComfort ? '' : (formatGuestsLabel(scenario.guests) || fallbackScenario.guests || ''),
-      sleeping: isComfort ? '' : (scenario.sleeping || fallbackScenario.sleeping || ''),
+      subtitle: '',
+      guests: '',
+      sleeping: '',
       description: scenario.description || fallbackScenario.description || '',
       amenityGroups: amenityGroups,
       photos: photos.length ? photos : (fallbackScenario.photos || []),
