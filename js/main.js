@@ -61,18 +61,6 @@ const revealObserver = new IntersectionObserver(entries => {
 }, { threshold: 0.12 });
 document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-/* ─── Карточки сценариев: клик / Enter → прокрутка к комнатам ─── */
-document.querySelectorAll('.scenario[data-scroll-to]').forEach(card => {
-  const go = () => {
-    const target = document.querySelector(card.dataset.scrollTo);
-    if (target) target.scrollIntoView({ behavior: 'smooth' });
-  };
-  card.addEventListener('click', go);
-  card.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
-  });
-});
-
 /* ─── Галерея сайта: лайтбокс ─── */
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightboxImg');
@@ -646,6 +634,74 @@ addEventListener('keydown', e => {
   else if (roomViewer.classList.contains('open')) closeRoomViewer();
 });
 
+/* ─── Общий fade-слайдер изображений ─── */
+function initFadeSlider({
+  slides,
+  dots = [],
+  interval = 4000,
+  pauseOnHoverEl = null
+} = {}) {
+  const list = [...slides];
+  const dotsList = [...dots];
+  if (!list.length) return null;
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  let index = list.findIndex(slide => slide.classList.contains('is-active'));
+  if (index < 0) index = 0;
+  let timer = null;
+
+  function sync() {
+    list.forEach((slide, i) => {
+      slide.classList.toggle('is-active', i === index);
+    });
+    dotsList.forEach((dot, i) => {
+      const on = i === index;
+      dot.classList.toggle('is-active', on);
+      dot.setAttribute('aria-current', on ? 'true' : 'false');
+    });
+  }
+
+  function show(next) {
+    if (!list.length) return;
+    index = ((next % list.length) + list.length) % list.length;
+    sync();
+  }
+
+  function stop() {
+    if (timer) {
+      clearInterval(timer);
+      timer = null;
+    }
+  }
+
+  function start() {
+    stop();
+    if (list.length < 2 || reduceMotion.matches) return;
+    timer = setInterval(() => show(index + 1), interval);
+  }
+
+  sync();
+
+  dotsList.forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      show(i);
+      const hovered = pauseOnHoverEl && pauseOnHoverEl.matches(':hover');
+      if (!hovered) start();
+    });
+  });
+
+  if (pauseOnHoverEl) {
+    pauseOnHoverEl.addEventListener('mouseenter', stop);
+    pauseOnHoverEl.addEventListener('mouseleave', start);
+  }
+
+  start();
+  if (reduceMotion.addEventListener) reduceMotion.addEventListener('change', start);
+  else if (reduceMotion.addListener) reduceMotion.addListener(start);
+
+  return { show, start, stop };
+}
+
 /* ─── Accordion Gallery: hover на ПК, tap на мобильных ─── */
 (() => {
   const gallery = document.getElementById('accGallery');
@@ -698,35 +754,22 @@ addEventListener('keydown', e => {
     });
   });
 
-  /* Fade-ротация 3 главных фото в первой панели */
-  const slides = [...gallery.querySelectorAll('.acc-panel__slides img')];
-  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  let slideIndex = 0;
-  let slideTimer = null;
+  initFadeSlider({
+    slides: gallery.querySelectorAll('.acc-panel__slides img'),
+    interval: 4000
+  });
+})();
 
-  function showSlide(next) {
-    if (!slides.length) return;
-    slides[slideIndex].classList.remove('is-active');
-    slideIndex = next % slides.length;
-    slides[slideIndex].classList.add('is-active');
-  }
-
-  function stopSlides() {
-    if (slideTimer) {
-      clearInterval(slideTimer);
-      slideTimer = null;
-    }
-  }
-
-  function startSlides() {
-    stopSlides();
-    if (slides.length < 2 || reduceMotion.matches) return;
-    slideTimer = setInterval(() => showSlide(slideIndex + 1), 4000);
-  }
-
-  startSlides();
-  if (reduceMotion.addEventListener) reduceMotion.addEventListener('change', startSlides);
-  else if (reduceMotion.addListener) reduceMotion.addListener(startSlides);
+/* ─── Слайдер террасы ─── */
+(() => {
+  const root = document.getElementById('terraceSlider');
+  if (!root) return;
+  initFadeSlider({
+    slides: root.querySelectorAll('.terrace-slider__slide'),
+    dots: root.querySelectorAll('.terrace-slider__dot'),
+    interval: 4000,
+    pauseOnHoverEl: root
+  });
 })();
 
 /* ─── Кнопка «Наверх» ─── */
@@ -734,5 +777,57 @@ backTop.addEventListener('click', () => {
   scrollTo({ top: 0, behavior: 'smooth' });
 });
 
+/* ─── Видео-фон блока бронирования ─── */
+(() => {
+  const video = document.querySelector('.booking-media__video');
+  if (!video) return;
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const syncPlayback = () => {
+    if (reduceMotion.matches) {
+      video.pause();
+      video.removeAttribute('autoplay');
+      return;
+    }
+    video.muted = true;
+    video.playsInline = true;
+    const play = video.play();
+    if (play && typeof play.catch === 'function') play.catch(() => {});
+  };
+
+  syncPlayback();
+  video.addEventListener('loadeddata', syncPlayback);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden || reduceMotion.matches) return;
+    syncPlayback();
+  });
+  if (typeof reduceMotion.addEventListener === 'function') {
+    reduceMotion.addEventListener('change', syncPlayback);
+  } else if (typeof reduceMotion.addListener === 'function') {
+    reduceMotion.addListener(syncPlayback);
+  }
+})();
+
+/* ─── Иконки OTDYH23 в статичных блоках ─── */
+(function fillOtdyhIcons() {
+  const getIcon = typeof getOtdyh23Icon === 'function' ? getOtdyh23Icon : null;
+  if (!getIcon) return;
+  document.querySelectorAll('[data-otdyh-icon]').forEach(el => {
+    const name = el.getAttribute('data-otdyh-icon');
+    if (!name) return;
+    const html = getIcon(name, 'otdyh23-icon otdyh23-icon--md');
+    if (html) el.innerHTML = html;
+  });
+})();
+
 /* ─── Запасной фон, если изображение не загрузилось ─── */
-document.querySelectorAll('img').forEach(bindImageFallback);
+document.querySelectorAll('img').forEach(img => {
+  bindImageFallback(img);
+  if (!img.closest('.to-sea__visual')) return;
+  const markMissing = () => {
+    const visual = img.closest('.to-sea__visual');
+    if (visual) visual.classList.add('is-missing');
+  };
+  img.addEventListener('error', markMissing);
+  if (img.complete && img.naturalWidth === 0) markMissing();
+});
