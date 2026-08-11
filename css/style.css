@@ -1207,28 +1207,73 @@ p{margin:0 0 18px}
   line-height:1.65;
 }
 
-/* ─── Экскурсии: виджет Gosha Travel ─── */
+/* ─── Экскурсии: фирменный партнёрский блок ─── */
 .excursions{
   background:linear-gradient(180deg,#fbf8f2 0%,#f5f7f4 48%,#f0f4f4 100%);
   padding:96px 0;
 }
 .excursions-wrap{
-  width:min(1100px,calc(100% - 36px));
+  width:min(820px,calc(100% - 36px));
   margin:auto;
 }
-.excursions .head{margin-bottom:40px}
-.excursions-widget{
-  width:100%;
-  margin:0 auto;
-}
-.excursions-widget iframe{
-  display:block;
-  width:100%;
-  max-width:100%;
-  border:none;
-  border-radius:30px;
+.excursions-card{
+  position:relative;
   overflow:hidden;
-  background:transparent;
+  padding:48px 52px;
+  border:1px solid rgba(22,57,70,.06);
+  border-radius:var(--r);
+  background:#fffefb;
+  box-shadow:
+    0 18px 48px rgba(13,41,51,.06),
+    inset 0 1px 0 rgba(255,255,255,.9);
+  transition:box-shadow .4s var(--ease),background .4s var(--ease);
+}
+.excursions-card::before{
+  content:"";
+  position:absolute;
+  left:0;top:22%;bottom:22%;
+  width:1.5px;
+  background:#6F9EA8;
+  border-radius:2px;
+  opacity:0;
+  transform:scaleY(.72);
+  transition:opacity .35s var(--ease),transform .35s var(--ease);
+}
+.excursions-card:hover{
+  background:#fffcf6;
+  box-shadow:
+    0 24px 56px rgba(13,41,51,.08),
+    inset 0 1px 0 rgba(255,255,255,.95);
+}
+.excursions-card:hover::before{
+  opacity:1;
+  transform:scaleY(1);
+}
+.excursions-card__body{
+  max-width:560px;
+}
+.excursions-card h2{
+  margin:0 0 18px;
+  font-size:clamp(28px,3.4vw,42px);
+  letter-spacing:-.03em;
+  line-height:1.15;
+}
+.excursions-card p{
+  margin:0 0 16px;
+  color:var(--muted);
+  font-size:17px;
+  line-height:1.7;
+}
+.excursions-card p.excursions-card__note{
+  margin:0 0 28px;
+  color:#6F9EA8;
+  font-size:14.5px;
+  font-weight:600;
+  letter-spacing:.01em;
+  line-height:1.55;
+}
+.excursions-card .btn{
+  min-width:min(100%,220px);
 }
 
 /* ─── Правила ─── */
@@ -1426,6 +1471,8 @@ footer{padding:39px 0;background:#091f27;color:rgba(255,255,255,.65);font-size:1
   .to-sea__beaches{grid-template-columns:1fr;gap:16px}
   .to-sea__beach-photo{min-height:200px}
   .to-sea__routes{grid-template-columns:1fr;gap:14px;margin-top:24px}
+  .excursions{padding:80px 0}
+  .excursions-card{padding:40px 36px}
   .rules{grid-template-columns:1fr 1fr}
   .acc-gallery{height:440px;min-height:380px}
 }
@@ -1534,8 +1581,12 @@ footer{padding:39px 0;background:#091f27;color:rgba(255,255,255,.65);font-size:1
   .booking-section__content{padding:72px 0 80px;min-height:min(780px,88vh)}
   .booking-card{padding:34px 28px 30px}
   .excursions{padding:72px 0}
-  .excursions-wrap{width:min(1100px,calc(100% - 28px))}
-  .excursions .head{margin-bottom:28px}
+  .excursions-wrap{width:min(820px,calc(100% - 28px))}
+  .excursions-card{padding:32px 22px}
+  .excursions-card h2{margin-bottom:14px;font-size:clamp(26px,7vw,34px)}
+  .excursions-card p{font-size:15.5px;line-height:1.65}
+  .excursions-card p.excursions-card__note{margin-bottom:22px;font-size:13.5px}
+  .excursions-card .btn{width:100%}
   .rules{grid-template-columns:1fr}
   .terrace-amenities{grid-template-columns:1fr}
   .booking-section__content{padding:56px 0 64px;min-height:0}

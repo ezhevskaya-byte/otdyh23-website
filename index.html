@@ -526,18 +526,23 @@
 </section>
 
 <!-- ═══════════════════════════════════════════
-     ЭКСКУРСИИ: виджет Gosha Travel
+     ЭКСКУРСИИ: партнёрский блок
      ═══════════════════════════════════════════ -->
 <section class="section excursions" id="excursions" aria-labelledby="excursions-title">
   <div class="wrap excursions-wrap">
-    <div class="head reveal">
-      <p class="eyebrow">Экскурсии и впечатления</p>
-      <h2 id="excursions-title">Планируйте отдых заранее</h2>
-      <p>Ещё до приезда можно познакомиться с экскурсиями, выбрать интересные маршруты и заранее продумать программу отдыха. Виджет поможет посмотреть доступные варианты и подобрать подходящие впечатления.</p>
-    </div>
-    <div class="excursions-widget reveal">
-<!-- /gosha.travel widget --> <iframe src="https://w.gosha.travel/?uid=osGxVe9knjRmxZmQ" style="width: 100%; border: none; border-radius: 30px; overflow: hidden;" id="gosha-widget" ></iframe> <a href="https://gosha.travel/" style="display: none;">курортный помощник Гоша</a> <script type="text/javascript"> (function () { function handleMessage(event) { if (event.origin === "https://w.gosha.travel") { const iframe = document.getElementById("gosha-widget"); if (iframe && event.data) { iframe.style.height = (+event.data + 20) + "px"; } } } window.addEventListener("message", handleMessage); window.addEventListener("beforeunload", function () { window.removeEventListener("message", handleMessage); }); })(); </script> <!-- /gosha.travel widget -->
-    </div>
+    <article class="excursions-card reveal">
+      <div class="excursions-card__body">
+        <h2 id="excursions-title">Хотите увидеть больше?</h2>
+        <p>Экскурсии по Сочи и окрестностям можно выбрать и забронировать онлайн у нашего туристического партнёра.</p>
+        <p class="excursions-card__note">Маршруты, описание и бронирование — на сайте партнёра.</p>
+        <a
+          class="btn solid"
+          href="https://w.gosha.travel/?uid=osGxVe9knjRmxZmQ"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Выбрать экскурсию</a>
+      </div>
+    </article>
   </div>
 </section>
 
