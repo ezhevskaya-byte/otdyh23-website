@@ -108,6 +108,96 @@ const roomViewerTabs = document.getElementById('roomViewerTabs');
 const roomViewerPanels = document.getElementById('roomViewerPanels');
 let roomViewerLastFocus = null;
 let roomViewerTabsList = [];
+let currentRoomId = null;
+let currentScenarioId = null;
+let applyingRoomDeepLink = false;
+
+/*
+ * Стабильные URL для MAX-бота: /?room={roomId}&scenario={scenarioId}#rooms
+ * Канонические scenarioId — из ROOM_CATALOG (js/room-catalog.js).
+ * Алиасы нужны только из-за того, что data/*.json при загрузке
+ * подменяет id сценариев Комфорт (comfort-2 → 2-guests и т.п.).
+ */
+const ROOM_SCENARIO_ID_ALIASES = {
+  'comfort-2': '2-guests',
+  '2-guests': 'comfort-2',
+  'comfort-3': '3-guests',
+  '3-guests': 'comfort-3',
+  'comfort-cot': 'baby-cot',
+  'baby-cot': 'comfort-cot'
+};
+
+const ROOM_SCENARIO_CANONICAL_IDS = {
+  'comfort:2-guests': 'comfort-2',
+  'comfort:3-guests': 'comfort-3',
+  'comfort:baby-cot': 'comfort-cot'
+};
+
+function canonicalScenarioId(roomId, scenarioId) {
+  if (!scenarioId) return '';
+  return ROOM_SCENARIO_CANONICAL_IDS[roomId + ':' + scenarioId] || scenarioId;
+}
+
+function findRoomScenario(room, roomId, requestedId) {
+  const scenarios = (room && Array.isArray(room.scenarios)) ? room.scenarios : [];
+  if (!scenarios.length) return null;
+  if (!requestedId) return scenarios[0];
+  const exact = scenarios.find(s => s && s.id === requestedId);
+  if (exact) return exact;
+  if (roomId !== 'comfort') return null;
+  const alias = ROOM_SCENARIO_ID_ALIASES[requestedId];
+  return alias ? (scenarios.find(s => s && s.id === alias) || null) : null;
+}
+
+function parseRoomDeepLink() {
+  const params = new URLSearchParams(location.search);
+  const roomId = params.get('room');
+  const scenarioId = params.get('scenario');
+  if (!roomId || !ROOM_CATALOG[roomId]) return null;
+  return { roomId: roomId, scenarioId: scenarioId || '' };
+}
+
+function syncRoomDeepLinkUrl(roomId, scenarioId) {
+  if (applyingRoomDeepLink) return;
+  const url = new URL(location.href);
+  url.searchParams.set('room', roomId);
+  if (scenarioId) url.searchParams.set('scenario', scenarioId);
+  else url.searchParams.delete('scenario');
+  url.hash = 'rooms';
+  const next = url.pathname + url.search + url.hash;
+  if (location.pathname + location.search + location.hash !== next) {
+    history.replaceState(null, '', next);
+  }
+}
+
+function clearRoomDeepLinkUrl() {
+  const url = new URL(location.href);
+  if (!url.searchParams.has('room') && !url.searchParams.has('scenario')) return;
+  url.searchParams.delete('room');
+  url.searchParams.delete('scenario');
+  history.replaceState(null, '', url.pathname + url.search + url.hash);
+}
+
+function applyRoomDeepLink() {
+  const link = parseRoomDeepLink();
+  if (!link) return;
+
+  const rooms = document.getElementById('rooms');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (rooms) {
+    rooms.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  const open = () => {
+    applyingRoomDeepLink = true;
+    openRoomViewer(link.roomId, link.scenarioId);
+    applyingRoomDeepLink = false;
+    syncRoomDeepLinkUrl(currentRoomId, currentScenarioId);
+  };
+
+  if (reduceMotion) open();
+  else setTimeout(open, 280);
+}
 
 function goToBooking(e) {
   if (e) e.preventDefault();
@@ -195,9 +285,13 @@ function activateRoomTab(tab) {
       if (copy) copy.scrollTop = 0;
     }
   });
+  if (currentRoomId && tab && tab.dataset.canonicalScenarioId) {
+    currentScenarioId = tab.dataset.canonicalScenarioId;
+    syncRoomDeepLinkUrl(currentRoomId, currentScenarioId);
+  }
 }
 
-function renderRoomViewer(roomId) {
+function renderRoomViewer(roomId, scenarioId) {
   const room = ROOM_CATALOG[roomId];
   if (!room) return;
 
@@ -208,9 +302,13 @@ function renderRoomViewer(roomId) {
   roomViewerTabsList = [];
 
   const scenarios = room.scenarios || [];
+  const requested = findRoomScenario(room, roomId, scenarioId);
+  const activeId = requested ? requested.id : (scenarios[0] && scenarios[0].id);
+  currentScenarioId = canonicalScenarioId(roomId, activeId);
   roomViewerTabs.hidden = scenarios.length < 2;
 
-  scenarios.forEach((scenario, index) => {
+  scenarios.forEach((scenario) => {
+    const isActive = scenario.id === activeId;
     const tabId = 'roomTab-' + scenario.id;
     const panelId = 'roomPanel-' + scenario.id;
 
@@ -218,10 +316,12 @@ function renderRoomViewer(roomId) {
     tab.type = 'button';
     tab.className = 'comfort-tab';
     tab.id = tabId;
+    tab.dataset.scenarioId = scenario.id;
+    tab.dataset.canonicalScenarioId = canonicalScenarioId(roomId, scenario.id);
     tab.setAttribute('role', 'tab');
     tab.setAttribute('aria-controls', panelId);
-    tab.setAttribute('aria-selected', index === 0 ? 'true' : 'false');
-    tab.tabIndex = index === 0 ? 0 : -1;
+    tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    tab.tabIndex = isActive ? 0 : -1;
     tab.textContent = scenario.title || scenario.id;
     tab.addEventListener('click', () => activateRoomTab(tab));
     tab.addEventListener('keydown', e => {
@@ -241,11 +341,11 @@ function renderRoomViewer(roomId) {
     roomViewerTabsList.push(tab);
 
     const panel = document.createElement('div');
-    panel.className = 'comfort-panel' + (index === 0 ? ' active' : '');
+    panel.className = 'comfort-panel' + (isActive ? ' active' : '');
     panel.id = panelId;
     panel.setAttribute('role', 'tabpanel');
     panel.setAttribute('aria-labelledby', tabId);
-    panel.hidden = index !== 0;
+    panel.hidden = !isActive;
 
     const copy = document.createElement('div');
     copy.className = 'comfort-panel-copy';
@@ -287,10 +387,12 @@ function renderRoomViewer(roomId) {
   });
 }
 
-function openRoomViewer(roomId) {
+function openRoomViewer(roomId, scenarioId) {
   if (!ROOM_CATALOG[roomId]) return;
   roomViewerLastFocus = document.activeElement;
-  renderRoomViewer(roomId);
+  currentRoomId = roomId;
+  renderRoomViewer(roomId, scenarioId);
+  syncRoomDeepLinkUrl(roomId, currentScenarioId);
   roomViewer.hidden = false;
   roomViewer.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -302,6 +404,9 @@ function closeRoomViewer() {
   roomViewer.classList.remove('open');
   roomViewer.hidden = true;
   document.body.style.overflow = '';
+  currentRoomId = null;
+  currentScenarioId = null;
+  clearRoomDeepLinkUrl();
   if (roomViewerLastFocus) roomViewerLastFocus.focus();
 }
 
@@ -605,6 +710,7 @@ async function loadRoomCategoriesFromJson() {
     loadRoomCategoryFromJson('family', 'data/family.json')
   ]);
   renderRooms();
+  applyRoomDeepLink();
 }
 
 loadRoomCategoriesFromJson();
