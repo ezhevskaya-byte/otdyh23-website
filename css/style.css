@@ -1212,13 +1212,17 @@ p{margin:0 0 18px}
   background:linear-gradient(180deg,#fbf8f2 0%,#f5f7f4 48%,#f0f4f4 100%);
   padding:96px 0;
 }
-.excursions-wrap{
-  width:min(820px,calc(100% - 36px));
-  margin:auto;
-}
 .excursions-card{
   position:relative;
   overflow:hidden;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:
+    "copy qr"
+    "action qr";
+  column-gap:36px;
+  row-gap:28px;
+  align-items:start;
   padding:48px 52px;
   border:1px solid rgba(22,57,70,.06);
   border-radius:var(--r);
@@ -1249,31 +1253,85 @@ p{margin:0 0 18px}
   opacity:1;
   transform:scaleY(1);
 }
-.excursions-card__body{
-  max-width:560px;
+.excursions-card__copy{
+  grid-area:copy;
+  min-width:0;
 }
+.excursions-card__copy .eyebrow{margin-bottom:12px}
 .excursions-card h2{
   margin:0 0 18px;
-  font-size:clamp(28px,3.4vw,42px);
+  font-size:clamp(30px,3.5vw,48px);
   letter-spacing:-.03em;
-  line-height:1.15;
+  line-height:1.12;
 }
-.excursions-card p{
+.excursions-card__lead{
+  margin:0 0 14px;
+  color:var(--deep);
+  font-size:18px;
+  line-height:1.6;
+}
+.excursions-card__text{
   margin:0 0 16px;
   color:var(--muted);
   font-size:17px;
   line-height:1.7;
 }
-.excursions-card p.excursions-card__note{
-  margin:0 0 28px;
-  color:#6F9EA8;
+.excursions-card__note{
+  margin:0;
+  color:var(--muted);
+  font-size:16px;
+  font-weight:400;
+  line-height:1.65;
+}
+.excursions-card__action{
+  grid-area:action;
+  align-self:start;
+}
+.excursions-card__action .btn{
+  min-width:min(100%,220px);
+}
+.excursions-qr{
+  grid-area:qr;
+  align-self:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  margin:0;
+  width:280px;
+  max-width:100%;
+  padding:28px 24px 22px;
+  border:1px solid rgba(22,57,70,.06);
+  border-radius:22px;
+  background:#fff;
+  box-shadow:
+    0 10px 28px rgba(13,41,51,.05),
+    inset 0 1px 0 rgba(255,255,255,.95);
+}
+.excursions-qr__code{
+  width:232px;
+  max-width:100%;
+  aspect-ratio:1 / 1;
+  background:#fff;
+}
+.excursions-qr__code img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center;
+}
+.excursions-qr__caption{
+  margin:16px 0 0;
+  color:var(--deep);
   font-size:14.5px;
   font-weight:600;
-  letter-spacing:.01em;
-  line-height:1.55;
+  line-height:1.45;
 }
-.excursions-card .btn{
-  min-width:min(100%,220px);
+.excursions-qr__partner{
+  margin:8px 0 0;
+  color:var(--muted);
+  font-size:12px;
+  letter-spacing:.04em;
 }
 
 /* ─── Правила ─── */
@@ -1397,10 +1455,44 @@ p{margin:0 0 18px}
 
 /* ─── Подвал ─── */
 footer{padding:39px 0;background:#091f27;color:rgba(255,255,255,.65);font-size:13px}
-.footer-in{display:flex;justify-content:space-between;gap:20px}
+.footer-in{display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+.footer-meta{display:flex;flex-direction:column;gap:10px}
+.footer-legal{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;line-height:1.4}
+.footer-legal a{color:rgba(255,255,255,.42);transition:color .2s}
+.footer-legal a:hover{color:rgba(255,255,255,.72)}
+.footer-legal a:focus-visible{outline:1px solid rgba(232,212,176,.55);outline-offset:3px}
 .footer-links{display:flex;gap:17px}
 .footer-links a{transition:color .2s}
 .footer-links a:hover{color:var(--gold-light)}
+
+/* ─── Технические страницы (правила, политика) ─── */
+.legal-page{padding:56px 0 80px;background:var(--ivory);min-height:58vh}
+.legal-page__inner{max-width:720px}
+.legal-page .eyebrow{margin-bottom:10px}
+.legal-page h1{
+  margin:0 0 18px;font-family:Prata,Georgia,serif;font-weight:400;
+  font-size:clamp(28px,4vw,40px);line-height:1.15;color:var(--deep);
+}
+.legal-page__lead{margin:0 0 40px;color:var(--muted);font-size:17px;line-height:1.65}
+.legal-page__section{margin:0 0 34px}
+.legal-page__section h2{
+  margin:0 0 14px;font-family:Prata,Georgia,serif;font-weight:400;
+  font-size:22px;line-height:1.25;color:var(--deep);
+}
+.legal-page__section p,
+.legal-page__section li{color:var(--muted);font-size:15.5px;line-height:1.7}
+.legal-page__section p{margin:0 0 12px}
+.legal-page__section p:last-child{margin-bottom:0}
+.legal-page__section ul{margin:0;padding-left:1.15em}
+.legal-page__section li{margin:0 0 8px}
+.legal-page__section li:last-child{margin-bottom:0}
+.legal-page__note{margin-top:40px;padding-top:24px;border-top:1px solid rgba(36,57,64,.1)}
+.legal-page__note p{margin:0 0 12px;color:var(--muted);font-size:15.5px;line-height:1.7}
+.legal-page__note p:last-child{margin-bottom:0}
+.legal-page a{color:var(--navy);text-decoration:underline;text-decoration-color:rgba(22,57,70,.22);text-underline-offset:3px;transition:color .2s,text-decoration-color .2s}
+.legal-page a:hover{color:var(--deep);text-decoration-color:rgba(111,158,168,.55)}
+.legal-page a{color:var(--navy);text-decoration:underline;text-decoration-color:rgba(22,57,70,.22);text-underline-offset:3px;transition:color .2s,text-decoration-color .2s}
+.legal-page a:hover{color:var(--deep);text-decoration-color:rgba(111,158,168,.55)}
 
 /* ─── Кнопка «Наверх» ─── */
 .back-top{
@@ -1472,7 +1564,7 @@ footer{padding:39px 0;background:#091f27;color:rgba(255,255,255,.65);font-size:1
   .to-sea__beach-photo{min-height:200px}
   .to-sea__routes{grid-template-columns:1fr;gap:14px;margin-top:24px}
   .excursions{padding:80px 0}
-  .excursions-card{padding:40px 36px}
+  .excursions-card{padding:40px 36px;column-gap:32px}
   .rules{grid-template-columns:1fr 1fr}
   .acc-gallery{height:440px;min-height:380px}
 }
@@ -1509,6 +1601,19 @@ footer{padding:39px 0;background:#091f27;color:rgba(255,255,255,.65);font-size:1
     margin:16px;
     padding:22px 20px;
   }
+  .excursions-card{
+    grid-template-columns:1fr;
+    grid-template-areas:
+      "copy"
+      "qr"
+      "action";
+    row-gap:22px;
+    padding:36px 28px;
+  }
+  .excursions-card__copy{max-width:none}
+  .excursions-qr{justify-self:center}
+  .excursions-card__action{width:100%}
+  .excursions-card__action .btn{width:100%}
 }
 
 /* ─── Адаптив: мобильный ─── */
@@ -1581,12 +1686,13 @@ footer{padding:39px 0;background:#091f27;color:rgba(255,255,255,.65);font-size:1
   .booking-section__content{padding:72px 0 80px;min-height:min(780px,88vh)}
   .booking-card{padding:34px 28px 30px}
   .excursions{padding:72px 0}
-  .excursions-wrap{width:min(820px,calc(100% - 28px))}
-  .excursions-card{padding:32px 22px}
+  .excursions-card{padding:32px 22px;row-gap:20px}
   .excursions-card h2{margin-bottom:14px;font-size:clamp(26px,7vw,34px)}
-  .excursions-card p{font-size:15.5px;line-height:1.65}
-  .excursions-card p.excursions-card__note{margin-bottom:22px;font-size:13.5px}
-  .excursions-card .btn{width:100%}
+  .excursions-card__lead{font-size:16.5px}
+  .excursions-card__text{font-size:15.5px;line-height:1.65}
+  .excursions-card__note{font-size:15px}
+  .excursions-qr{width:min(260px,100%);padding:22px 18px 18px}
+  .excursions-qr__caption{font-size:14px}
   .rules{grid-template-columns:1fr}
   .terrace-amenities{grid-template-columns:1fr}
   .booking-section__content{padding:56px 0 64px;min-height:0}
@@ -1598,7 +1704,9 @@ footer{padding:39px 0;background:#091f27;color:rgba(255,255,255,.65);font-size:1
   .widget-wrap{padding:14px 12px 18px;min-height:380px;border-radius:18px}
   #search-widget,#search-widget iframe{min-height:360px!important}
   .booking-media__video{object-position:center 40%}
-  .footer-in{flex-direction:column;text-align:center}
+  .footer-in{flex-direction:column;align-items:center;text-align:center}
+  .footer-meta{align-items:center}
+  .footer-legal{justify-content:center}
   .footer-links{justify-content:center}
   .back-top{right:18px;bottom:18px;width:44px;height:44px}
   .acc-panel{height:84px;border-radius:18px}
